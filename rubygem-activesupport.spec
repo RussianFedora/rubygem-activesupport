@@ -1,157 +1,294 @@
-# Generated from activesupport-1.4.4.gem by gem2rpm -*- rpm-spec -*-
-%define ruby_sitelib %(ruby -rrbconfig -e "puts Config::CONFIG['sitelibdir']")
-%define gemdir %(ruby -rubygems -e 'puts Gem::dir' 2>/dev/null)
-%define gemname activesupport
-%define geminstdir %{gemdir}/gems/%{gemname}-%{version}
+%define rbname activesupport
+%define version 3.2.13
+%define release 1
 
-%define rubyabi 1.8
+%global enable_doc 0
 
-Summary: Support and utility classes used by the Rails framework
-Name: rubygem-%{gemname}
-Epoch: 1
-Version: 3.2.13
-Release: 1%{?dist}
-Group: Development/Languages
-License: MIT
-URL:        http://%{gemname}.rubyforge.org/
-Source0:    http://rubygems.org/downloads/%{gemname}-%{version}.gem
+Summary: A toolkit of support libraries and Ruby core extensions extracted from the Rails framework.
+Name: rubygem-%{rbname}
 
-# For some reason the activesupport doesn't ship with the upstream Rakefile
-Source1: http://github.com/rails/rails/raw/2-3-stable/activesupport/Rakefile
+Version: %{version}
+Release: %{release}%{dist}
+Group: Development/Ruby
+License: Distributable
+URL: http://www.rubyonrails.org
+Source0: http://rubygems.org/downloads/%{rbname}-%{version}.gem
+BuildRoot: %{_tmppath}/%{name}-%{version}-root
 
-# Also the activesupport gem doesn't ship with the test suite like the other
-# Rails rpms, you may check it out like so
-# git clone http://github.com/rails/rails.git -b 2-3-stable
-# cd rails/activesupport/
-# git reset --hard 9da7ff8842e5e6407872  # revisions after this correspond to 
-#                                        # rails 2.3.9 and break test suite 
-#                                        # when run against stock 2.3.8 gem
-# tar czvf activesupport-23-tests.tgz test/
-Source2: activesupport-23-tests.tgz
-
-BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
-Requires: rubygems
-Requires: ruby(abi) = %{rubyabi}
+Requires: ruby >= 1.8.7
+Requires: rubygems >= 1.8.10
 Requires: rubygem(i18n) = 0.6.1
-Requires: rubygem(multi_json) >= 1.0
-BuildRequires: rubygems
-BuildRequires(check): rubygem(rake)
-BuildRequires(check): rubygem(mocha)
+Requires: rubygem(multi_json) => 1.0
+Requires: rubygem(multi_json) < 2
+
+BuildRequires: ruby >= 1.8.7
+BuildRequires: rubygems >= 1.8.10
+%if %{enable_doc} > 0
+BuildRequires: rubygem(rdoc)
+%endif
+
 BuildArch: noarch
-Provides: rubygem(%{gemname}) = %{version}
+
+Provides: rubygem(activesupport) = %{version}
+
+%define gemdir /usr/lib/ruby/gems/1.8
+%define gembuilddir %{buildroot}%{gemdir}
 
 %description
-Utility library which carries commonly used classes and
-goodies from the Rails framework
+A toolkit of support libraries and Ruby core extensions extracted from the
+Rails framework. Rich support for multibyte strings, internationalization,
+time zones, and testing.
+
 
 %prep
+%setup -T -c
 
 %build
 
 %install
-rm -rf %{buildroot}
-mkdir -p %{buildroot}%{gemdir}
-#_mx gem install --local --install-dir %{buildroot}%{gemdir} \
-#_mx             --force --rdoc %{SOURCE0}
-gem install --local --install-dir %{buildroot}%{gemdir} \
-            --force --no-ri --no-rdoc %{SOURCE0}
-
-# move the rakefile in place
-cp %{SOURCE1} %{buildroot}%{geminstdir}
-
-# move the tests into place
-#_mx tar xzvf %{SOURCE2} -C %{buildroot}%{geminstdir}
-
-# Remove bad shebangs
-#_mx for file in %{buildroot}%{geminstdir}/lib/active_support/vendor/builder-2.1.2/builder.rb \
-#_mx       %{buildroot}%{geminstdir}/lib/active_support/vendor/builder-2.1.2/blankslate.rb \
-#_mx       %{buildroot}%{geminstdir}/lib/active_support/vendor/builder-2.1.2/builder/* ; do
-#_mx  sed -i -e '1s/^\#!.*$//' $file
-#_mx done
-
-# Fix anything executable that does not have a shebang
-for file in `find %{buildroot}/%{geminstdir} -type f -perm /a+x`; do
-    [ -z "`head -n 1 $file | grep \"^#!/\"`" ] && chmod -v 644 $file
-done
-
-# Find files with a shebang that do not have executable permissions
-for file in `find %{buildroot}/%{geminstdir} -type f ! -perm /a+x -name "*.rb"`; do
-    [ ! -z "`head -n 1 $file | grep \"^#!/\"`" ] && chmod -v 755 $file
-done
+%{__rm} -rf %{buildroot}
+mkdir -p %{gembuilddir}
+%if %{enable_doc} > 0
+gem install --local --install-dir %{gembuilddir} --force %{SOURCE0}
+%elseif
+gem install --local --install-dir %{gembuilddir} --force --no-ri --no-rdoc %{SOURCE0}
+%endif
 
 %clean
-rm -rf %{buildroot}
-
-%check
-pushd %{buildroot}%{geminstdir} 
-rake test
+%{__rm} -rf %{buildroot}
 
 %files
-%defattr(-, root, root, -)
-%dir %{geminstdir}
-#_mx %doc %{geminstdir}/CHANGELOG
-%{geminstdir}/Rakefile
-%{geminstdir}/lib
-#_mx %doc %{geminstdir}/README
-#_mx %doc %{gemdir}/doc/%{gemname}-%{version}
-%doc %{geminstdir}/CHANGELOG.md
-%doc %{geminstdir}/MIT-LICENSE
-%doc %{geminstdir}/README.rdoc
-%{gemdir}/cache/%{gemname}-%{version}.gem
-%{gemdir}/specifications/%{gemname}-%{version}.gemspec
-#_mx %{geminstdir}/test
+%defattr(-, root, root)
+%{gemdir}/gems/activesupport-%{version}/CHANGELOG.md
+%{gemdir}/gems/activesupport-%{version}/MIT-LICENSE
+%{gemdir}/gems/activesupport-%{version}/README.rdoc
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/all.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/backtrace_cleaner.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/base64.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/basic_object.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/benchmarkable.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/buffered_logger.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/builder.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/cache/file_store.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/cache/mem_cache_store.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/cache/memory_store.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/cache/null_store.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/cache/strategy/local_cache.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/cache.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/callbacks.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/concern.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/configurable.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/core_ext/array/access.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/core_ext/array/conversions.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/core_ext/array/extract_options.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/core_ext/array/grouping.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/core_ext/array/prepend_and_append.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/core_ext/array/random_access.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/core_ext/array/uniq_by.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/core_ext/array/wrap.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/core_ext/array.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/core_ext/benchmark.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/core_ext/big_decimal/conversions.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/core_ext/big_decimal.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/core_ext/class/attribute.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/core_ext/class/attribute_accessors.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/core_ext/class/delegating_attributes.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/core_ext/class/subclasses.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/core_ext/class.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/core_ext/date/acts_like.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/core_ext/date/calculations.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/core_ext/date/conversions.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/core_ext/date/freeze.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/core_ext/date/zones.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/core_ext/date_time/acts_like.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/core_ext/date_time/calculations.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/core_ext/date_time/conversions.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/core_ext/date_time/zones.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/core_ext/enumerable.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/core_ext/exception.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/core_ext/file/atomic.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/core_ext/file/path.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/core_ext/file.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/core_ext/float/rounding.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/core_ext/float.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/core_ext/hash/conversions.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/core_ext/hash/deep_dup.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/core_ext/hash/deep_merge.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/core_ext/hash/diff.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/core_ext/hash/except.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/core_ext/hash/indifferent_access.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/core_ext/hash/keys.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/core_ext/hash/reverse_merge.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/core_ext/hash/slice.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/core_ext/hash.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/core_ext/integer/inflections.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/core_ext/integer/multiple.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/core_ext/integer/time.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/core_ext/integer.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/core_ext/io.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/core_ext/kernel/agnostics.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/core_ext/kernel/debugger.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/core_ext/kernel/reporting.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/core_ext/kernel/singleton_class.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/core_ext/kernel.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/core_ext/load_error.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/core_ext/logger.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/core_ext/module/aliasing.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/core_ext/module/anonymous.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/core_ext/module/attr_internal.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/core_ext/module/attribute_accessors.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/core_ext/module/delegation.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/core_ext/module/deprecation.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/core_ext/module/introspection.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/core_ext/module/method_names.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/core_ext/module/qualified_const.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/core_ext/module/reachable.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/core_ext/module/remove_method.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/core_ext/module/synchronization.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/core_ext/module.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/core_ext/name_error.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/core_ext/numeric/bytes.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/core_ext/numeric/time.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/core_ext/numeric.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/core_ext/object/acts_like.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/core_ext/object/blank.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/core_ext/object/conversions.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/core_ext/object/duplicable.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/core_ext/object/inclusion.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/core_ext/object/instance_variables.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/core_ext/object/to_json.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/core_ext/object/to_param.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/core_ext/object/to_query.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/core_ext/object/try.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/core_ext/object/with_options.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/core_ext/object.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/core_ext/proc.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/core_ext/process/daemon.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/core_ext/process.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/core_ext/range/blockless_step.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/core_ext/range/conversions.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/core_ext/range/cover.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/core_ext/range/include_range.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/core_ext/range/overlaps.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/core_ext/range.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/core_ext/regexp.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/core_ext/rexml.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/core_ext/string/access.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/core_ext/string/behavior.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/core_ext/string/conversions.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/core_ext/string/encoding.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/core_ext/string/exclude.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/core_ext/string/filters.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/core_ext/string/inflections.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/core_ext/string/inquiry.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/core_ext/string/interpolation.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/core_ext/string/multibyte.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/core_ext/string/output_safety.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/core_ext/string/starts_ends_with.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/core_ext/string/strip.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/core_ext/string/xchar.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/core_ext/string.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/core_ext/time/acts_like.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/core_ext/time/calculations.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/core_ext/time/conversions.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/core_ext/time/marshal.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/core_ext/time/publicize_conversion_methods.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/core_ext/time/zones.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/core_ext/uri.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/core_ext.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/dependencies/autoload.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/dependencies.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/deprecation/behaviors.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/deprecation/method_wrappers.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/deprecation/proxy_wrappers.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/deprecation/reporting.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/deprecation.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/descendants_tracker.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/duration.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/file_update_checker.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/file_watcher.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/gzip.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/hash_with_indifferent_access.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/i18n.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/i18n_railtie.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/inflections.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/inflector/inflections.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/inflector/methods.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/inflector/transliterate.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/inflector.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/json/decoding.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/json/encoding.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/json/variable.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/json.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/lazy_load_hooks.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/locale/en.yml
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/log_subscriber/test_helper.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/log_subscriber.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/memoizable.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/message_encryptor.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/message_verifier.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/multibyte/chars.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/multibyte/exceptions.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/multibyte/unicode.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/multibyte/utils.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/multibyte.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/notifications/fanout.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/notifications/instrumenter.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/notifications.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/option_merger.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/ordered_hash.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/ordered_options.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/railtie.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/rescuable.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/ruby/shim.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/string_inquirer.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/tagged_logging.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/test_case.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/testing/assertions.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/testing/declarative.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/testing/deprecation.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/testing/isolation.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/testing/mochaing.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/testing/pending.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/testing/performance/jruby.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/testing/performance/rubinius.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/testing/performance/ruby/mri.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/testing/performance/ruby/yarv.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/testing/performance/ruby.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/testing/performance.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/testing/setup_and_teardown.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/time/autoload.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/time.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/time_with_zone.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/values/time_zone.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/values/unicode_tables.dat
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/version.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/whiny_nil.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/xml_mini/jdom.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/xml_mini/libxml.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/xml_mini/libxmlsax.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/xml_mini/nokogiri.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/xml_mini/nokogirisax.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/xml_mini/rexml.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support/xml_mini.rb
+%{gemdir}/gems/activesupport-%{version}/lib/active_support.rb
 
+%if %{enable_doc} > 0
+%doc %{gemdir}/doc/activesupport-%{version}
+%endif
+%{gemdir}/cache/activesupport-%{version}.gem
+%{gemdir}/specifications/activesupport-%{version}.gemspec
 
 %changelog
-* Tue Jun 4 2013 Sergey Mihailov <sergey.mihailov@gpm.int> - 3.2.13-1
-- Rebuilt for new version
+* Mon Jun 10 2013 Sergey Mihailov <sergey.mihailov@gmail.com> - 3.2.13-1
+- add key for disable doc
 
-* Wed Aug 25 2010 Mohammed Morsi <mmorsi@redhat.com> - 1:2.3.8-2
-- bumped version
+* Fri Apr 12 2013 shk@redhat.com 3.2.13-1
+- Updated to 3.2.13
 
-* Wed Aug 04 2010 Mohammed Morsi <mmorsi@redhat.com> - 1:2.3.8-1
-- Update to 2.3.8
-- Added check section with rubygem-mocha dependency
-- Added upsteam Rakefile and test suite to run tests
+* Mon Feb 4 2013 shk@redhat.com 3.0.20-1
+- Updated to 3.0.20
 
-* Thu Jan 28 2010 Mamoru Tasaka <mtasaka@ioa.s.u-tokyo.ac.jp> - 1:2.3.5-1
-- Update to 2.3.5
+* Fri Jan 25 2013 shk@redhat.com 3.0.19-1
+- Updated to 3.0.19
 
-* Wed Oct  7 2009 David Lutterkort <lutter@redhat.com> - 1:2.3.4-2
-- Bump Epoch to ensure upgrade path from F-11
-
-* Mon Sep 7 2009 Mamoru Tasaka <mtasaka@ioa.s.u-tokyo.ac.jp> - 2.3.4-1
-- Update to 2.3.4 (bug 520843, CVE-2009-3009)
-
-* Sun Jul 26 2009 Jeroen van Meeuwen <j.van.meeuwen@ogd.nl> - 2.3.3-1
-- New upstream version
-
-* Mon Mar 16 2009 Jeroen van Meeuwen <kanarip@fedoraproject.org> - 2.3.2-1
-- New upstream version
-
-* Wed Feb 25 2009 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 2.2.2-2
-- Rebuilt for https://fedoraproject.org/wiki/Fedora_11_Mass_Rebuild
-
-* Mon Nov 24 2008 Jeroen van Meeuwen <kanarip@fedoraproject.org> - 2.2.2-1
-- New upstream version
-
-* Tue Sep 16 2008 David Lutterkort <dlutter@redhat.com> - 2.1.1-1
-- New version (fixes CVE-2008-4094)
-
-* Thu Jul 31 2008 Michael Stahnke <stahnma@fedoraproject.org> - 2.1.0-1
-- New Upstream
-
-* Mon Apr 07 2008 David Lutterkort <dlutter@redhat.com> - 2.0.2-1
-- New version
-
-* Mon Dec 10 2007 David Lutterkort <dlutter@redhat.com> - 2.0.1-1
-- New version
-
-* Wed Nov 28 2007 David Lutterkort <dlutter@redhat.com> - 1.4.4-3
-- Fix buildroot
-
-* Tue Nov 14 2007 David Lutterkort <dlutter@redhat.com> - 1.4.4-2
-- Install README and CHANGELOG in _docdir
-
-* Tue Oct 30 2007 David Lutterkort <dlutter@redhat.com> - 1.4.4-1
-- Initial package
