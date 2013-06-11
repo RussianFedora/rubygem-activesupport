@@ -1,14 +1,15 @@
 %define rbname activesupport
-%define version 3.2.13
-%define release 1
+%define release 2
 
 %global enable_doc 0
+
+Epoch: 1
 
 Summary: A toolkit of support libraries and Ruby core extensions extracted from the Rails framework.
 Name: rubygem-%{rbname}
 
-Version: %{version}
-Release: %{release}%{dist}
+Version: 3.2.13
+Release: 2%{?dist}
 Group: Development/Ruby
 License: Distributable
 URL: http://www.rubyonrails.org
@@ -282,6 +283,7 @@ gem install --local --install-dir %{gembuilddir} --force --no-ri --no-rdoc %{SOU
 %changelog
 * Mon Jun 10 2013 Sergey Mihailov <sergey.mihailov@gmail.com> - 3.2.13-1
 - add key for disable doc
+- add epoch 1
 
 * Fri Apr 12 2013 shk@redhat.com 3.2.13-1
 - Updated to 3.2.13
