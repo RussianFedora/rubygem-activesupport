@@ -9,7 +9,7 @@ Summary: A toolkit of support libraries and Ruby core extensions extracted from 
 Name: rubygem-%{rbname}
 
 Version: 3.2.13
-Release: 2%{?dist}
+Release: 3%{?dist}
 Group: Development/Ruby
 License: Distributable
 URL: http://www.rubyonrails.org
